@@ -17,26 +17,26 @@
 
 package org.springframework.cloud.gateway.support;
 
-import static org.springframework.http.HttpStatus.GATEWAY_TIMEOUT;
+import org.springframework.core.convert.converter.Converter;
 
-import org.springframework.web.bind.annotation.ResponseStatus;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 
-@ResponseStatus(value = GATEWAY_TIMEOUT, reason = "Response took longer than configured timeout")
-public class TimeoutException extends Exception {
-
-	public TimeoutException() {
-	}
-
-	public TimeoutException(String message) {
-		super(message);
-	}
-
-	/**
-	 * Disables fillInStackTrace for performance reasons.
-	 * @return
-	 */
+public class StringToZonedDateTimeConverter implements Converter<String, ZonedDateTime> {
 	@Override
-	public synchronized Throwable fillInStackTrace() {
-		return this;
+	public ZonedDateTime convert(String source) {
+		ZonedDateTime dateTime;
+		try {
+			long epoch = Long.parseLong(source);
+
+			dateTime = Instant.ofEpochMilli(epoch).atOffset(ZoneOffset.ofTotalSeconds(0))
+					.toZonedDateTime();
+		} catch (NumberFormatException e) {
+			// try ZonedDateTime instead
+			dateTime = ZonedDateTime.parse(source);
+		}
+
+		return dateTime;
 	}
 }
